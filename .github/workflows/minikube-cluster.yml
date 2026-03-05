@@ -1,0 +1,51 @@
+name: Minikube Cluster Setup
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  minikube:
+    name: Minikube on GitHub Runner
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    env:
+      MINIKUBE_DRIVER: docker
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -Ls https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+          kubectl version --client
+
+      - name: Install Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          chmod +x minikube-linux-amd64
+          sudo mv minikube-linux-amd64 /usr/local/bin/minikube
+          minikube version
+
+      - name: Start Minikube cluster
+        run: |
+          minikube start \
+            --driver=${MINIKUBE_DRIVER} \
+            --cpus=2 \
+            --memory=4096mb
+
+      - name: Verify cluster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Cleanup Minikube
+        if: always()
+        run: minikube delete
