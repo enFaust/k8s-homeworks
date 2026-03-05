@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - kind-ci
+      - main
+  workflow_dispatch:
 
 jobs:
   kind-cluster:
